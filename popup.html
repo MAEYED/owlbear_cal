@@ -1,174 +1,66 @@
+--------------
+popup.html
+--------------
+
 <!DOCTYPE html>
 <html>
 <head>
   <style>
     body { font-family: sans-serif; padding: 15px; color: #eee; background: #242424; margin: 0; }
-    h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; text-align: center; }
-    img { max-width: 100%; max-height: 200px; display: block; margin: 0 auto 15px auto; border-radius: 8px; }
+    h2 { margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
+    img { max-width: 100%; max-height: 250px; display: block; margin: 0 auto 15px auto; border-radius: 8px; }
     .hidden { display: none !important; }
-    
-    /* Stats Grid Styling */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; background: #333; padding: 10px; border-radius: 8px; text-align: center;}
-    .stat-box { background: #444; padding: 10px; border-radius: 4px; }
-    .stat-label { font-size: 0.8em; color: #aaa; text-transform: uppercase; }
-    .stat-value { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
-    
-    /* Form Inputs & Buttons */
-    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 4px;}
+    textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 15px; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 4px;}
     button { width: 100%; padding: 10px; cursor: pointer; background: #5a42f5; color: white; border: none; border-radius: 4px; margin-bottom: 5px; font-weight: bold;}
     button:hover { background: #4a35cf; }
-    .secondary-btn { background: #555; }
-    .secondary-btn:hover { background: #444; }
-    .flex-row { display: flex; gap: 10px; }
-    
-    /* List View Styling */
-    .char-list-item { background: #333; padding: 10px; border-radius: 4px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-    .char-list-item:hover { background: #444; }
-    .char-list-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    #cancelBtn { background: #555; }
+    #cancelBtn:hover { background: #444; }
   </style>
   <script src="https://owlbear-rodeo.unpkg.com/@owlbear-rodeo/sdk@1.13.0/lib/owlbear.js"></script>
 </head>
 <body>
-  <h2 id="headerTitle">Character Sheets</h2>
+  <h2 id="charName">Loading...</h2>
   
-  <div id="listMode">
-     <div id="characterList">Loading characters...</div>
-  </div>
-
-  <div id="viewMode" class="hidden">
-     <button class="secondary-btn" id="backBtn" style="margin-bottom: 15px;">&larr; Back to List</button>
-     <img id="charImg" src="" alt="Token Image" />
-     
-     <div class="stats-grid">
-        <div class="stat-box">
-           <div class="stat-label">HP</div>
-           <div class="stat-value"><span id="charHP">0</span> / <span id="charMaxHP">0</span></div>
-        </div>
-        <div class="stat-box">
-           <div class="stat-label">Armor Class</div>
-           <div class="stat-value" id="charAC">10</div>
-        </div>
-     </div>
-
-     <div style="margin-bottom: 15px;">
-         <strong style="color:#aaa;">Notes & Abilities:</strong>
-         <div id="charInfo" style="white-space: pre-wrap; margin-top: 5px; background: #333; padding: 10px; border-radius: 4px; min-height: 80px;"></div>
-     </div>
-
-     <button id="editBtn">Edit Sheet</button>
+  <div id="viewMode">
+     <img id="charImg" src="" alt="Image Loading..." />
+     <p id="charInfo" style="white-space: pre-wrap;">No information set.</p>
+     <button id="editBtn">Edit Information</button>
   </div>
 
   <div id="editMode" class="hidden">
      <label>Custom Image URL (optional):</label>
      <input type="text" id="imgInput" placeholder="https://example.com/image.jpg" />
-     
-     <div class="flex-row">
-         <div style="flex: 1;">
-             <label>Current HP:</label>
-             <input type="number" id="hpInput" />
-         </div>
-         <div style="flex: 1;">
-             <label>Max HP:</label>
-             <input type="number" id="maxHpInput" />
-         </div>
-     </div>
-
-     <label>Armor Class (AC):</label>
-     <input type="number" id="acInput" />
-
-     <label>Notes, Attacks, Spells:</label>
-     <textarea id="infoInput" rows="5" placeholder="Enter character details..."></textarea>
-     
+     <label>Brief Info / Lore:</label>
+     <textarea id="infoInput" rows="6" placeholder="Enter character details..."></textarea>
      <button id="saveBtn">Save to Token</button>
-     <button class="secondary-btn" id="cancelBtn">Cancel</button>
+     <button id="cancelBtn">Cancel</button>
   </div>
 
   <script>
-    const METADATA_KEY = "com.your-name.character-sheet/data";
-    let allCharacters = [];
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemId = urlParams.get('id');
+    const METADATA_KEY = "pop-me-up/data";
     let currentItem = null;
 
     OBR.onReady(async () => {
-      // Listen for token updates on the board
-      OBR.scene.items.onChange((items) => {
-         allCharacters = items.filter(item => item.layer === "CHARACTER");
-         // Update the list if we are currently looking at it
-         if (!document.getElementById("listMode").classList.contains("hidden")) {
-             renderList();
-         }
-      });
-
-      // Initial grab of tokens when the popup opens
-      const items = await OBR.scene.items.getItems();
-      allCharacters = items.filter(item => item.layer === "CHARACTER");
-      renderList();
+      const items = await OBR.scene.items.getItems([itemId]);
+      if (items.length > 0) {
+         currentItem = items[0];
+         render();
+      }
     });
 
-    function renderList() {
-       document.getElementById("headerTitle").innerText = "Character Roster";
-       const listDiv = document.getElementById("characterList");
-       listDiv.innerHTML = "";
+    function render() {
+       document.getElementById("charName").innerText = currentItem.name || "Unnamed Character";
+       const data = currentItem.metadata[METADATA_KEY] || { imageUrl: "", info: "" };
        
-       if (allCharacters.length === 0) {
-           listDiv.innerHTML = "<p>No character tokens found. Add some tokens to the 'Character' layer on your map!</p>";
-           return;
-       }
-
-       // Create a button for every character token
-       allCharacters.forEach(char => {
-           const data = char.metadata[METADATA_KEY] || {};
-           const imgSrc = data.imageUrl || char.image.url;
-           const name = char.name || "Unnamed Character";
-
-           const itemDiv = document.createElement("div");
-           itemDiv.className = "char-list-item";
-           itemDiv.innerHTML = `
-               <img src="${imgSrc}" class="char-list-img" />
-               <strong>${name}</strong>
-           `;
-           
-           // When clicked, open that character's sheet
-           itemDiv.onclick = () => {
-               currentItem = char;
-               showViewMode();
-           };
-           listDiv.appendChild(itemDiv);
-       });
-    }
-
-    function showViewMode() {
-       document.getElementById("listMode").classList.add("hidden");
-       document.getElementById("editMode").classList.add("hidden");
-       document.getElementById("viewMode").classList.remove("hidden");
-       renderView();
-    }
-
-    function renderView() {
-       document.getElementById("headerTitle").innerText = currentItem.name || "Unnamed Character";
-       
-       const data = currentItem.metadata[METADATA_KEY] || { 
-           imageUrl: "", hp: 10, maxHp: 10, ac: 10, info: "" 
-       };
-       
+       // If no custom URL is provided, fallback to the default token image
        document.getElementById("charImg").src = data.imageUrl || currentItem.image.url; 
-       document.getElementById("charHP").innerText = data.hp;
-       document.getElementById("charMaxHP").innerText = data.maxHp;
-       document.getElementById("charAC").innerText = data.ac;
-       document.getElementById("charInfo").innerText = data.info || "No notes available.";
+       document.getElementById("charInfo").innerText = data.info || "No information available. Click Edit to add some.";
        
        document.getElementById("imgInput").value = data.imageUrl || "";
-       document.getElementById("hpInput").value = data.hp || 0;
-       document.getElementById("maxHpInput").value = data.maxHp || 0;
-       document.getElementById("acInput").value = data.ac || 0;
        document.getElementById("infoInput").value = data.info || "";
     }
-
-    // Button Click Handlers
-    document.getElementById("backBtn").onclick = () => {
-       document.getElementById("viewMode").classList.add("hidden");
-       document.getElementById("listMode").classList.remove("hidden");
-       renderList();
-    };
 
     document.getElementById("editBtn").onclick = () => {
        document.getElementById("viewMode").classList.add("hidden");
@@ -176,24 +68,27 @@
     };
 
     document.getElementById("cancelBtn").onclick = () => {
-       showViewMode();
+       document.getElementById("editMode").classList.add("hidden");
+       document.getElementById("viewMode").classList.remove("hidden");
     };
 
     document.getElementById("saveBtn").onclick = async () => {
-       const newData = {
-           imageUrl: document.getElementById("imgInput").value,
-           hp: parseInt(document.getElementById("hpInput").value) || 0,
-           maxHp: parseInt(document.getElementById("maxHpInput").value) || 0,
-           ac: parseInt(document.getElementById("acInput").value) || 0,
-           info: document.getElementById("infoInput").value
-       };
+       const newImg = document.getElementById("imgInput").value;
+       const newInfo = document.getElementById("infoInput").value;
        
-       await OBR.scene.items.updateItems([currentItem.id], (items) => {
-          items[0].metadata[METADATA_KEY] = newData;
+       // Save to the specific token so all players see the update
+       await OBR.scene.items.updateItems([itemId], (items) => {
+          items[0].metadata[METADATA_KEY] = {
+             imageUrl: newImg,
+             info: newInfo
+          };
        });
 
-       currentItem.metadata[METADATA_KEY] = newData;
-       showViewMode();
+       currentItem.metadata[METADATA_KEY] = { imageUrl: newImg, info: newInfo };
+       render();
+
+       document.getElementById("editMode").classList.add("hidden");
+       document.getElementById("viewMode").classList.remove("hidden");
     };
   </script>
 </body>
