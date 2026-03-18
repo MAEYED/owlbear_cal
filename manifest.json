@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "manifest_version": 1,
   "description": "Click a token to display a full-size character image and brief info.",
-  "icon": "icon.svg",
+  "icon": "/icon.svg",
   "background_url": "/background.html"
 }
