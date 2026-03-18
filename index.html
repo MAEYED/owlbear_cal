@@ -6,22 +6,23 @@
 <body>
   <script>
     OBR.onReady(() => {
-      OBR.contextMenu.create({
-        id: "com.your-name.character-sheet-menu",
+      // Create a button in the main Extensions toolbar
+      OBR.action.create({
+        id: "com.your-name.character-manager-action",
         icons: [
           {
             icon: "/icon.svg",
-            label: "Character Sheet",
+            label: "Character Sheets",
             filter: {
-              every: [{ key: "layer", value: "CHARACTER" }],
+              active: false,
             },
           },
         ],
-        onClick(context) {
-          const itemId = context.items[0].id;
+        onClick() {
+          // Open the modal when the toolbar button is clicked
           OBR.modal.open({
-            id: "com.your-name.character-sheet-modal",
-            url: `/popup.html?id=${itemId}`,
+            id: "com.your-name.character-manager-modal",
+            url: "/popup.html",
             height: 600,
             width: 400,
           });

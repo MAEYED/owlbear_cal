@@ -13,20 +13,30 @@
     .stat-label { font-size: 0.8em; color: #aaa; text-transform: uppercase; }
     .stat-value { font-size: 1.2em; font-weight: bold; margin-top: 5px; }
     
-    /* Form Inputs */
+    /* Form Inputs & Buttons */
     textarea, input { width: 100%; box-sizing: border-box; margin-bottom: 10px; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 4px;}
     button { width: 100%; padding: 10px; cursor: pointer; background: #5a42f5; color: white; border: none; border-radius: 4px; margin-bottom: 5px; font-weight: bold;}
     button:hover { background: #4a35cf; }
-    #cancelBtn { background: #555; }
-    #cancelBtn:hover { background: #444; }
+    .secondary-btn { background: #555; }
+    .secondary-btn:hover { background: #444; }
     .flex-row { display: flex; gap: 10px; }
+    
+    /* List View Styling */
+    .char-list-item { background: #333; padding: 10px; border-radius: 4px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .char-list-item:hover { background: #444; }
+    .char-list-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
   </style>
   <script src="https://owlbear-rodeo.unpkg.com/@owlbear-rodeo/sdk@1.13.0/lib/owlbear.js"></script>
 </head>
 <body>
-  <h2 id="charName">Loading...</h2>
+  <h2 id="headerTitle">Character Sheets</h2>
   
-  <div id="viewMode">
+  <div id="listMode">
+     <div id="characterList">Loading characters...</div>
+  </div>
+
+  <div id="viewMode" class="hidden">
+     <button class="secondary-btn" id="backBtn" style="margin-bottom: 15px;">&larr; Back to List</button>
      <img id="charImg" src="" alt="Token Image" />
      
      <div class="stats-grid">
@@ -70,39 +80,82 @@
      <textarea id="infoInput" rows="5" placeholder="Enter character details..."></textarea>
      
      <button id="saveBtn">Save to Token</button>
-     <button id="cancelBtn">Cancel</button>
+     <button class="secondary-btn" id="cancelBtn">Cancel</button>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const itemId = urlParams.get('id');
     const METADATA_KEY = "com.your-name.character-sheet/data";
+    let allCharacters = [];
     let currentItem = null;
 
     OBR.onReady(async () => {
-      const items = await OBR.scene.items.getItems([itemId]);
-      if (items.length > 0) {
-         currentItem = items[0];
-         render();
-      }
+      // Listen for token updates on the board
+      OBR.scene.items.onChange((items) => {
+         allCharacters = items.filter(item => item.layer === "CHARACTER");
+         // Update the list if we are currently looking at it
+         if (!document.getElementById("listMode").classList.contains("hidden")) {
+             renderList();
+         }
+      });
+
+      // Initial grab of tokens when the popup opens
+      const items = await OBR.scene.items.getItems();
+      allCharacters = items.filter(item => item.layer === "CHARACTER");
+      renderList();
     });
 
-    function render() {
-       document.getElementById("charName").innerText = currentItem.name || "Unnamed Character";
+    function renderList() {
+       document.getElementById("headerTitle").innerText = "Character Roster";
+       const listDiv = document.getElementById("characterList");
+       listDiv.innerHTML = "";
        
-       // Load data or set defaults if it's a new token
+       if (allCharacters.length === 0) {
+           listDiv.innerHTML = "<p>No character tokens found. Add some tokens to the 'Character' layer on your map!</p>";
+           return;
+       }
+
+       // Create a button for every character token
+       allCharacters.forEach(char => {
+           const data = char.metadata[METADATA_KEY] || {};
+           const imgSrc = data.imageUrl || char.image.url;
+           const name = char.name || "Unnamed Character";
+
+           const itemDiv = document.createElement("div");
+           itemDiv.className = "char-list-item";
+           itemDiv.innerHTML = `
+               <img src="${imgSrc}" class="char-list-img" />
+               <strong>${name}</strong>
+           `;
+           
+           // When clicked, open that character's sheet
+           itemDiv.onclick = () => {
+               currentItem = char;
+               showViewMode();
+           };
+           listDiv.appendChild(itemDiv);
+       });
+    }
+
+    function showViewMode() {
+       document.getElementById("listMode").classList.add("hidden");
+       document.getElementById("editMode").classList.add("hidden");
+       document.getElementById("viewMode").classList.remove("hidden");
+       renderView();
+    }
+
+    function renderView() {
+       document.getElementById("headerTitle").innerText = currentItem.name || "Unnamed Character";
+       
        const data = currentItem.metadata[METADATA_KEY] || { 
            imageUrl: "", hp: 10, maxHp: 10, ac: 10, info: "" 
        };
        
-       // Populate View Mode
        document.getElementById("charImg").src = data.imageUrl || currentItem.image.url; 
        document.getElementById("charHP").innerText = data.hp;
        document.getElementById("charMaxHP").innerText = data.maxHp;
        document.getElementById("charAC").innerText = data.ac;
        document.getElementById("charInfo").innerText = data.info || "No notes available.";
        
-       // Populate Edit Mode
        document.getElementById("imgInput").value = data.imageUrl || "";
        document.getElementById("hpInput").value = data.hp || 0;
        document.getElementById("maxHpInput").value = data.maxHp || 0;
@@ -110,18 +163,23 @@
        document.getElementById("infoInput").value = data.info || "";
     }
 
+    // Button Click Handlers
+    document.getElementById("backBtn").onclick = () => {
+       document.getElementById("viewMode").classList.add("hidden");
+       document.getElementById("listMode").classList.remove("hidden");
+       renderList();
+    };
+
     document.getElementById("editBtn").onclick = () => {
        document.getElementById("viewMode").classList.add("hidden");
        document.getElementById("editMode").classList.remove("hidden");
     };
 
     document.getElementById("cancelBtn").onclick = () => {
-       document.getElementById("editMode").classList.add("hidden");
-       document.getElementById("viewMode").classList.remove("hidden");
+       showViewMode();
     };
 
     document.getElementById("saveBtn").onclick = async () => {
-       // Gather data from inputs
        const newData = {
            imageUrl: document.getElementById("imgInput").value,
            hp: parseInt(document.getElementById("hpInput").value) || 0,
@@ -130,17 +188,12 @@
            info: document.getElementById("infoInput").value
        };
        
-       // Update Owlbear Rodeo
-       await OBR.scene.items.updateItems([itemId], (items) => {
+       await OBR.scene.items.updateItems([currentItem.id], (items) => {
           items[0].metadata[METADATA_KEY] = newData;
        });
 
-       // Update local state and re-render
        currentItem.metadata[METADATA_KEY] = newData;
-       render();
-
-       document.getElementById("editMode").classList.add("hidden");
-       document.getElementById("viewMode").classList.remove("hidden");
+       showViewMode();
     };
   </script>
 </body>
