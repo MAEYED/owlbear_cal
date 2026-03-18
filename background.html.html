@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://owlbear-rodeo.unpkg.com/@owlbear-rodeo/sdk@1.13.0/lib/owlbear.js"></script>
+  <script src="https://unpkg.com/@owlbear-rodeo/sdk@1.13.0/lib/owlbear.js"></script>
 </head>
 <body>
   <script>
@@ -23,7 +23,7 @@
           // เปิดหน้าต่าง Modal ก็ต้องแก้ ID ให้มี / ด้วยเช่นกัน
           OBR.modal.open({
             id: "com.my-custom-addon.pop-me-up/modal",
-            url: 'popup.html?id=${itemId}', 
+            url: `popup.html?id=${itemId}`,
             height: 550,
             width: 400,
           });
