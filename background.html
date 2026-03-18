@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://unpkg.com/@owlbear-rodeo/sdk@1.13.0/lib/owlbear.js"></script>
 </head>
 <body>
-  <script>
+  <script type="module">
+    import OBR from "https://esm.sh/@owlbear-rodeo/sdk@1.13.0";
+
     OBR.onReady(() => {
       OBR.contextMenu.create({
         id: "com.my-custom-addon.pop-me-up/context-menu",
         icons: [
           {
-            icon: "icon.svg", 
+            icon: "/icon.svg", 
             label: "Pop Me Up",
             filter: {
               every: [{ key: "layer", value: "CHARACTER" }],
@@ -21,7 +22,7 @@
           const itemId = context.items[0].id;
           OBR.modal.open({
             id: "com.my-custom-addon.pop-me-up/modal",
-            url: `popup.html?id=${itemId}`, 
+            url: `/popup.html?id=${itemId}`, 
             height: 550,
             width: 400,
           });
