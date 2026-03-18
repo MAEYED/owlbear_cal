@@ -1,7 +1,3 @@
---------------
-popup.html
---------------
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -54,7 +50,6 @@ popup.html
        document.getElementById("charName").innerText = currentItem.name || "Unnamed Character";
        const data = currentItem.metadata[METADATA_KEY] || { imageUrl: "", info: "" };
        
-       // If no custom URL is provided, fallback to the default token image
        document.getElementById("charImg").src = data.imageUrl || currentItem.image.url; 
        document.getElementById("charInfo").innerText = data.info || "No information available. Click Edit to add some.";
        
@@ -76,7 +71,6 @@ popup.html
        const newImg = document.getElementById("imgInput").value;
        const newInfo = document.getElementById("infoInput").value;
        
-       // Save to the specific token so all players see the update
        await OBR.scene.items.updateItems([itemId], (items) => {
           items[0].metadata[METADATA_KEY] = {
              imageUrl: newImg,

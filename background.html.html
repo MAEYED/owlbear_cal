@@ -7,11 +7,10 @@
   <script>
     OBR.onReady(() => {
       OBR.contextMenu.create({
-        // แก้ไข ID ตรงนี้ให้มี / ตามกฎของ Owlbear
         id: "com.my-custom-addon.pop-me-up/context-menu",
         icons: [
           {
-            icon: "icon.svg", // เอา / ข้างหน้าออก เผื่อมีปัญหาเรื่อง Path
+            icon: "icon.svg", 
             label: "Pop Me Up",
             filter: {
               every: [{ key: "layer", value: "CHARACTER" }],
@@ -20,10 +19,10 @@
         ],
         onClick(context) {
           const itemId = context.items[0].id;
-          // เปิดหน้าต่าง Modal ก็ต้องแก้ ID ให้มี / ด้วยเช่นกัน
           OBR.modal.open({
             id: "com.my-custom-addon.pop-me-up/modal",
-            url: `popup.html?id=${itemId}`,
+            // FIX 2: Changed single quotes to backticks so ${itemId} works
+            url: `popup.html?id=${itemId}`, 
             height: 550,
             width: 400,
           });
