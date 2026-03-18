@@ -1,13 +1,10 @@
 {
-  "name": "Tabletop Calculator",
+  "name": "Pop Me Up",
   "version": "1.0.0",
   "manifest_version": 1,
-  "description": "A quick calculator popover for dice math.",
-  "action": {
-    "title": "Calculator",
-    "icon": "/icon.svg",
-    "popover": "/",
-    "width": 300,
-    "height": 400
+  "description": "Click a token to display a full-size character image and brief info.",
+  "icon": "/icon.svg",
+  "background": {
+    "url": "/background.html"
   }
 }
