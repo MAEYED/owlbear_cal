@@ -4,7 +4,8 @@
 </head>
 <body>
   <script type="module">
-    import OBR from "https://esm.sh/@owlbear-rodeo/sdk@1.13.0";
+    // FIX: Switched to jsDelivr and removed the strict version constraint
+    import OBR from "https://cdn.jsdelivr.net/npm/@owlbear-rodeo/sdk/+esm";
 
     OBR.onReady(() => {
       OBR.contextMenu.create({
