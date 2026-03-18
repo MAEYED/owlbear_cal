@@ -4,7 +4,5 @@
   "manifest_version": 1,
   "description": "Click a token to display a full-size character image and brief info.",
   "icon": "/icon.svg",
-  "background": {
-    "url": "/background.html"
-  }
+  "background_url": "/background.html"
 }
