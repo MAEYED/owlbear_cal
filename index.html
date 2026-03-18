@@ -7,11 +7,11 @@
   <script>
     OBR.onReady(() => {
       OBR.contextMenu.create({
-        id: "pop-me-up-context-menu",
+        id: "com.your-name.character-sheet-menu",
         icons: [
           {
             icon: "/icon.svg",
-            label: "Pop Me Up",
+            label: "Character Sheet",
             filter: {
               every: [{ key: "layer", value: "CHARACTER" }],
             },
@@ -19,11 +19,10 @@
         ],
         onClick(context) {
           const itemId = context.items[0].id;
-          // Open a modal window right in the middle of the screen
           OBR.modal.open({
-            id: "pop-me-up-modal",
-            url: '/popup.html?id=${itemId}',
-            height: 550,
+            id: "com.your-name.character-sheet-modal",
+            url: `/popup.html?id=${itemId}`,
+            height: 600,
             width: 400,
           });
         },

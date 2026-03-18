@@ -1,8 +1,8 @@
 {
-  "name": "Pop Me Up",
+  "name": "Simple Character Sheet",
   "version": "1.0.0",
   "manifest_version": 1,
-  "description": "Click a token to display a full-size character image and brief info.",
+  "description": "Click a token to open its character sheet.",
   "icon": "/icon.svg",
-  "background_url": "/background.html"
+  "background_url": "/index.html"
 }
